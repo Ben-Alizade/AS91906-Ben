@@ -4,7 +4,8 @@ from dataclasses import dataclass
 class ResearchItem:
     title: str
     url: str
-    source: str
+    date: str
+    authors: str
     summary: str
     tags: set[str]
     saved: bool = False

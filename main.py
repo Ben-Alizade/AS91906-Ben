@@ -7,6 +7,24 @@ from services import fetch
 
 class ResearchRadarApp:
 
+    def fetch_loading(self):
+            
+        fetch_loading_frame = tk.Frame(self.root)
+        fetch_loading_frame.pack()
+        
+        title_label = tk.Label(
+        fetch_loading_frame,
+        text="Receiving up to date info....",
+        font=("Arial", 20, "bold")
+    )
+        
+        title_label.pack(pady=10)
+
+        fetch.fetch_arxiv()
+        title_label.config(text="Received info from arxiv!\nNow fetching from hackernews...")
+
+        fetch.fetch_hackernews()
+
     def clear_page(self, frame):
         for widget in frame.winfo_children():
             widget.destroy()
@@ -15,7 +33,8 @@ class ResearchRadarApp:
         item1 = ResearchItem(
             title="Hello",
             url="url/",
-            source="fakesource",
+            date="yesterday",
+            authors="idk",
             summary="summary",
             tags={"AI", "Reinforcement learning"}
         )
@@ -23,7 +42,8 @@ class ResearchRadarApp:
         item2 = ResearchItem(
             title="Goodbye",
             url="url/33333",
-            source="realsource",
+            date="today",
+            authors="still idk",
             summary="not a summary",
             tags={"execution", "shittywifi"}
         )
@@ -46,7 +66,7 @@ class ResearchRadarApp:
 
         # create the buttons
         search_btn = tk.Button(dashboard_frame, text="Search", command="PLACEHOLDER")
-        fetch_btn = tk.Button(dashboard_frame, text="Fetch Latest Data", command="PLACEHOLDER")
+        fetch_btn = tk.Button(dashboard_frame, text="Fetch Latest Data", command=self.fetch_loading)
         saved_items_btn = tk.Button(dashboard_frame, text="Saved Items", command="PLACEHOLDER")
         generate_report_btn = tk.Button(dashboard_frame, text="Generate Report", command="PLACEHOLDER")
         exit_btn = tk.Button(dashboard_frame, text="Exit", command="PLACEHOLDER")

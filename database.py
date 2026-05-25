@@ -41,7 +41,8 @@ class DatabaseManager:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     title TEXT NOT NULL,
                     url TEXT NOT NULL UNIQUE,
-                    source TEXT NOT NULL,
+                    date TEXT NOT NULL,
+                    authors TEXT NOT NULL,
                     summary TEXT,
                     tags TEXT,
                     saved INTEGER DEFAULT 0,
@@ -58,12 +59,13 @@ class DatabaseManager:
 
             cursor.execute("""
                 INSERT OR IGNORE INTO items
-                (title, url, source, summary, tags, saved, read)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                (title, url, date, authors, summary, tags, saved, read)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """, (
             item.title,
             item.url, 
-            item.source,
+            item.date,
+            item.authors,
             item.summary,
             tags_text,
             int(item.saved),
@@ -75,7 +77,7 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             cursor.execute("""
-                SELECT id, title, url, source, summary, tags, saved, read
+                SELECT id, title, url, date, authors, summary, tags, saved, read
                 FROM items
                 ORDER BY id DESC
             """)
