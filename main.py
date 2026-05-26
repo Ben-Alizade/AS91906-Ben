@@ -4,10 +4,20 @@ from tkinter import ttk
 from database import DatabaseManager
 from models import ResearchItem
 from services import fetch
+import threading
 
 class ResearchRadarApp:
 
+    def run_fetch_background(self, title_label):
+
+        fetch.fetch_arxiv(self.database)
+        title_label.config(text="Received info from arxiv!\nNow fetching from hackernews...")
+
+        fetch.fetch_hackernews()
+
     def fetch_loading(self):
+
+        self.clear_page(self.dashboard_frame)
             
         fetch_loading_frame = tk.Frame(self.root)
         fetch_loading_frame.pack()
@@ -16,14 +26,11 @@ class ResearchRadarApp:
         fetch_loading_frame,
         text="Receiving up to date info....",
         font=("Arial", 20, "bold")
-    )
+        )
         
         title_label.pack(pady=10)
 
-        fetch.fetch_arxiv()
-        title_label.config(text="Received info from arxiv!\nNow fetching from hackernews...")
-
-        fetch.fetch_hackernews()
+        threading.Thread(target=self.run_fetch_background, args=(title_label,), daemon=True).start()
 
     def clear_page(self, frame):
         for widget in frame.winfo_children():
@@ -52,12 +59,12 @@ class ResearchRadarApp:
 
     def dashboard(self):
         
-        dashboard_frame = tk.Frame(self.root)
-        dashboard_frame.pack()
+        self.dashboard_frame = tk.Frame(self.root)
+        self.dashboard_frame.pack()
 
 
         title_label = tk.Label(
-            dashboard_frame,
+            self.dashboard_frame,
             text="AI research radar",
             font=("Arial", 20, "bold")
         )
@@ -65,11 +72,11 @@ class ResearchRadarApp:
         title_label.pack(pady=10)
 
         # create the buttons
-        search_btn = tk.Button(dashboard_frame, text="Search", command="PLACEHOLDER")
-        fetch_btn = tk.Button(dashboard_frame, text="Fetch Latest Data", command=self.fetch_loading)
-        saved_items_btn = tk.Button(dashboard_frame, text="Saved Items", command="PLACEHOLDER")
-        generate_report_btn = tk.Button(dashboard_frame, text="Generate Report", command="PLACEHOLDER")
-        exit_btn = tk.Button(dashboard_frame, text="Exit", command="PLACEHOLDER")
+        search_btn = tk.Button(self.dashboard_frame, text="Search", command="PLACEHOLDER")
+        fetch_btn = tk.Button(self.dashboard_frame, text="Fetch Latest Data", command=self.fetch_loading)
+        saved_items_btn = tk.Button(self.dashboard_frame, text="Saved Items", command="PLACEHOLDER")
+        generate_report_btn = tk.Button(self.dashboard_frame, text="Generate Report", command="PLACEHOLDER")
+        exit_btn = tk.Button(self.dashboard_frame, text="Exit", command="PLACEHOLDER")
 
 
         # im PACKING down there
@@ -79,23 +86,23 @@ class ResearchRadarApp:
         generate_report_btn.pack()
         exit_btn.pack()
 
-        return dashboard_frame
+        return self.dashboard_frame
     
     def __init__(self, root):
         self.root = root
         self.root.title("AI Research Radar")
         self.root.geometry("900x500")
 
-        database = DatabaseManager()
+        self.database = DatabaseManager()
 
         item1, item2 = self.create_sample_data()
-        database.add_item(item1)
-        database.add_item(item2)
+        self.database.add_item(item1)
+        self.database.add_item(item2)
 
         dashboard_frame = self.dashboard()
 
         # check whether items exist
-        items = database.get_all_items()
+        items = self.database.get_all_items()
 
         for item in items:
             print(item)
