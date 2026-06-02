@@ -10,12 +10,17 @@ class ResearchRadarApp:
 
     def run_fetch_background(self, title_label):
 
-        fetch.fetch_arxiv(self.database)
+        arxiv_items_added = fetch.fetch_arxiv(self.database)
         title_label.config(text="Received info from arxiv!\nNow fetching from hackernews...")
 
-        fetch.fetch_hackernews()
+        hackernews_items_added = fetch.fetch_hackernews()
+        total_items_added = hackernews_items_added + arxiv_items_added
+        title_label.config(text=f"Added {total_items_added} new items.")
 
-    def fetch_loading(self):
+        return_btn = tk.Button(self.dashboard_frame, text="Return home", command=self.dashboard)
+        return_btn.pack()
+
+    def fetch_new_info(self):
 
         self.clear_page(self.dashboard_frame)
             
@@ -73,7 +78,7 @@ class ResearchRadarApp:
 
         # create the buttons
         search_btn = tk.Button(self.dashboard_frame, text="Search", command="PLACEHOLDER")
-        fetch_btn = tk.Button(self.dashboard_frame, text="Fetch Latest Data", command=self.fetch_loading)
+        fetch_btn = tk.Button(self.dashboard_frame, text="Fetch Latest Data", command=self.fetch_new_info)
         saved_items_btn = tk.Button(self.dashboard_frame, text="Saved Items", command="PLACEHOLDER")
         generate_report_btn = tk.Button(self.dashboard_frame, text="Generate Report", command="PLACEHOLDER")
         exit_btn = tk.Button(self.dashboard_frame, text="Exit", command="PLACEHOLDER")
@@ -103,9 +108,6 @@ class ResearchRadarApp:
 
         # check whether items exist
         items = self.database.get_all_items()
-
-        for item in items:
-            print(item)
 
         self.clear_page(dashboard_frame)
         self.dashboard()
