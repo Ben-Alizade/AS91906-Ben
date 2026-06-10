@@ -4,113 +4,111 @@ from tkinter import ttk
 from database import DatabaseManager
 from models import ResearchItem
 from services import fetch
+
 import threading
+import time
+import math
 
 class ResearchRadarApp:
 
-    def run_fetch_background(self, title_label):
+    # Initial Functions --------------------------------
 
-        arxiv_items_added = fetch.fetch_arxiv(self.database)
-        title_label.config(text="Received info from arxiv!\nNow fetching from hackernews...")
+    def __init__(self, root):
+        self.root = root
+        self.root.title("AI Research Radar")
+        self.root.geometry("900x500")
 
-        hackernews_items_added = fetch.fetch_hackernews()
-        total_items_added = hackernews_items_added + arxiv_items_added
-        title_label.config(text=f"Added {total_items_added} new items.")
+        # Initialise the databasemanager class enabling operations
+        self.database = DatabaseManager()
 
-        return_btn = tk.Button(self.dashboard_frame, text="Return home", command=self.dashboard)
-        return_btn.pack()
-
-    def fetch_new_info(self):
-
-        self.clear_page(self.dashboard_frame)
-            
-        fetch_loading_frame = tk.Frame(self.root)
-        fetch_loading_frame.pack()
+        # Track the active screen frame
+        self.current_frame = None
         
-        title_label = tk.Label(
-        fetch_loading_frame,
-        text="Receiving up to date info....",
-        font=("Arial", 20, "bold")
-        )
-        
-        title_label.pack(pady=10)
+        # Start at the dashboard
+        self.show_dashboard()
 
-        threading.Thread(target=self.run_fetch_background, args=(title_label,), daemon=True).start()
+    def clear_screen(self):
+        """Destroys the current screen if it exists."""
+        if self.current_frame is not None:
+            self.current_frame.destroy()
 
-    def clear_page(self, frame):
-        for widget in frame.winfo_children():
-            widget.destroy()
+    # Pages -----------------------------------------------------------------------
 
-    def create_sample_data(self):
-        item1 = ResearchItem(
-            title="Hello",
-            url="url/",
-            date="yesterday",
-            authors="idk",
-            summary="summary",
-            tags={"AI", "Reinforcement learning"}
-        )
+    def show_dashboard(self):
+        self.clear_screen()
 
-        item2 = ResearchItem(
-            title="Goodbye",
-            url="url/33333",
-            date="today",
-            authors="still idk",
-            summary="not a summary",
-            tags={"execution", "shittywifi"}
-        )
+        # Create a fresh new frame container for the dashboard
+        self.current_frame = tk.Frame(self.root)
+        self.current_frame.pack(fill="both", expand=True)
 
-        return item1, item2
+        # Put widgets directly inside self.current_frame
+        title = tk.Label(self.current_frame, text="AI Research Radar", font=("Arial", 20, "bold"))
+        title.pack(pady=20)
 
-    def dashboard(self):
-        
-        self.dashboard_frame = tk.Frame(self.root)
-        self.dashboard_frame.pack()
+        # Create buttons
+        search_btn = tk.Button(self.current_frame, text="Search", command="PLACEHOLDER")
+        fetch_btn = tk.Button(self.current_frame, text="Fetch Latest Data", command=self.show_loading_screen)
+        saved_items_btn = tk.Button(self.current_frame, text="Saved Items", command="PLACEHOLDER")
+        generate_report_btn = tk.Button(self.current_frame, text="Generate Report", command="PLACEHOLDER")
+        exit_btn = tk.Button(self.current_frame, text="Exit", command="PLACEHOLDER")
 
-
-        title_label = tk.Label(
-            self.dashboard_frame,
-            text="AI research radar",
-            font=("Arial", 20, "bold")
-        )
-
-        title_label.pack(pady=10)
-
-        # create the buttons
-        search_btn = tk.Button(self.dashboard_frame, text="Search", command="PLACEHOLDER")
-        fetch_btn = tk.Button(self.dashboard_frame, text="Fetch Latest Data", command=self.fetch_new_info)
-        saved_items_btn = tk.Button(self.dashboard_frame, text="Saved Items", command="PLACEHOLDER")
-        generate_report_btn = tk.Button(self.dashboard_frame, text="Generate Report", command="PLACEHOLDER")
-        exit_btn = tk.Button(self.dashboard_frame, text="Exit", command="PLACEHOLDER")
-
-
-        # im PACKING down there
+        # Pack Buttons
         search_btn.pack()
         fetch_btn.pack()
         saved_items_btn.pack()
         generate_report_btn.pack()
         exit_btn.pack()
 
-        return self.dashboard_frame
-    
-    def __init__(self, root):
-        self.root = root
-        self.root.title("AI Research Radar")
-        self.root.geometry("900x500")
+    def show_loading_screen(self):
+        self.clear_screen()  # Clear the dashboard away
 
-        self.database = DatabaseManager()
+        # Create a fresh new frame container for the loading screen
+        self.current_frame = tk.Frame(self.root)
+        self.current_frame.pack(fill="both", expand=True)
 
-        item1, item2 = self.create_sample_data()
-        self.database.add_item(item1)
-        self.database.add_item(item2)
+        # Create status text label
+        self.status_label = tk.Label(self.current_frame, text="Receiving up-to-date info....", font=("Arial", 20, "bold"))
+        self.status_label.pack(pady=20)
 
-        dashboard_frame = self.dashboard()
+        # Start background work
+        threading.Thread(target=self.run_fetch_background, daemon=True).start()
 
-        # check whether items exist
-        items = self.database.get_all_items()
+    def show_search_library(self):
+        self.clear_screen()
 
-        self.clear_page(dashboard_frame)
-        self.dashboard()
+        self.show_selected_item("selected_item")
+
+
+    def show_selected_item(self, selected_item):
+        self.clear_screen
+        print(selected_item)
+
+
+    # Page Operations -----------------------------------------------------------------------
+
+    def run_fetch_background(self):
+
+        # Creates a time object to track the amount of time has passed
+        start_time = time.time()
+        
+        arxiv_fetch_number = fetch.fetch_arxiv(self.database)
+        self.status_label.config(text="Received info from arXiv!\nNow fetching from Hacker News...")
+        
+        hackernews_fetch_number = fetch.fetch_hackernews(self.database)
+        total_added_items = arxiv_fetch_number + hackernews_fetch_number
+
+        # Calculate the total time elapsed
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+
+        # Display in minute:second format
+        elapsed_time = f"{math.floor(elapsed_time // 60):.0f}:{elapsed_time % 60:.0f}"
+        
+        self.status_label.config(text=f"Done! Added {total_added_items} items in {elapsed_time}.")
+
+        # Create the return button after fetching is done
+        return_btn = tk.Button(self.current_frame, text="Return Home", command=self.show_dashboard)
+        return_btn.pack(pady=10)
 
 
 
