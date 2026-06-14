@@ -45,6 +45,7 @@ class DatabaseManager:
                     authors TEXT NOT NULL,
                     summary TEXT,
                     tags TEXT,
+                    trending INTEGER DEFAULT 0,
                     saved INTEGER DEFAULT 0,
                     read INTEGER DEFAULT 0
                 )
@@ -59,8 +60,8 @@ class DatabaseManager:
 
             cursor.execute("""
                 INSERT OR IGNORE INTO items
-                (title, url, date, authors, summary, tags, saved, read)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                (title, url, date, authors, summary, tags, trending, saved, read)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
             item.title,
             item.url, 
@@ -68,6 +69,7 @@ class DatabaseManager:
             item.authors,
             item.summary,
             tags_text,
+            int(item.trending),
             int(item.saved),
             int(item.read)))
 
@@ -77,7 +79,7 @@ class DatabaseManager:
             cursor = conn.cursor()
 
             cursor.execute("""
-                SELECT id, title, url, date, authors, summary, tags, saved, read
+                SELECT id, title, url, date, authors, summary, tags, trending, saved, read
                 FROM items
                 ORDER BY id DESC
             """)
@@ -85,3 +87,16 @@ class DatabaseManager:
             rows = cursor.fetchall()
 
         return rows
+    
+    # Marks an existing object as trending
+    def mark_as_trending(self, paper):
+        with self.connect() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("""
+            UPDATE items 
+            SET trending = 1 
+            WHERE url LIKE ?;
+            """, (
+                f"%{paper}%"
+            ))
