@@ -16,7 +16,7 @@ def fetch_hackernews(database):
     number_of_items_added = 0
     
     # Get data from hackernews
-    url = "https://hacker-news.firebaseio.com/v0/"
+    url = "https://algolia.com"
 
     # 1735689600 corresponds to Jan 1, 2025
     params = {
@@ -28,13 +28,21 @@ def fetch_hackernews(database):
 
     print("Querying Hacker News...")
 
-    # Get the data (safely)
+    # Get the data
     response = requests.get(url, params=params)
-    response.raise_for_status()
+
+    if response.status_code != 200:
+        print(f"HTTP Error {response.status_code}: Could not fetch data.")
+        return 0
+    else:
+        print("RAW RESPONSE TEXT:", response.text[:500]) # Prints first 500 characters
     
-    # Save the data into a variable
-    response_data = response.json()
-    print("Responses received from HN")
+    try:
+        # 3. Safely attempt to parse the JSON
+        response_data = response.json()
+    except requests.exceptions.JSONDecodeError:
+        print("Failed to decode JSON. The server sent text or HTML instead.")
+        return 0
     
     # Get existing items to check duplicates
     existing_items = database.get_all_items()
@@ -44,6 +52,7 @@ def fetch_hackernews(database):
 
     # Loop through the data
     for hit in response_data["hits"]:
+
         # Skip items missing a valid destination URL
         if not hit.get('url'):
             continue
@@ -54,7 +63,7 @@ def fetch_hackernews(database):
         if "arxiv.org" in hn_url:
             print(f"Found arXiv paper trending on HN: {hit['title']}")
             
-            # Extract the arXiv ID or clean URL to find it in your database
+            # Extract the arXiv ID or clean URL to find it in the database
             clean_arxiv_url = hn_url.split('/pdf/')[-1].split('.pdf')[0]
             
             # Tag as trending
@@ -73,14 +82,14 @@ def fetch_hackernews(database):
         # Returns 'author' as a single string, not an array of objects
         author_text = hit.get('author', 'Unknown')
 
-        #Parse the string ISO timestamp into a date object
+        # Parse the string ISO timestamp into a date object
         created_at_str = hit.get('created_at', '')[:10]
         try:
             item_date = datetime.strptime(created_at_str, "%Y-%m-%d").date()
         except ValueError:
             item_date = datetime.today().date()
 
-        # Create the researchitem
+        # Create the Research Item
         item = ResearchItem(
             title=hit.get('title', 'No Title'),
             url=hn_url,

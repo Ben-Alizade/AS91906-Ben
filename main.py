@@ -34,10 +34,22 @@ class ResearchRadarApp:
 
     # Pages -----------------------------------------------------------------------
 
+    def card(parent, img, card_command, card_row, card_column):
+        tk.Button(
+            parent,
+            image=img,
+            command=card_command,
+            bd=0,
+            bg="#2b2b2b",
+            activebackground="#2b2b2b",
+            highlightthickness=0,
+            cursor="hand2"
+        ).grid(row=card_row, column=card_column, padx=8, pady=8)
+
     def show_dashboard(self):
         self.clear_screen()
 
-        # Create a fresh new frame container for the dashboard
+        """# Create a fresh new frame container for the dashboard
         self.current_frame = tk.Frame(self.root)
         self.current_frame.pack(fill="both", expand=True)
 
@@ -46,18 +58,69 @@ class ResearchRadarApp:
         title.pack(pady=20)
 
         # Create buttons
-        search_btn = tk.Button(self.current_frame, text="Search", command="PLACEHOLDER")
+        search_btn = tk.Button(self.current_frame, text="Search", command=self.show_search_library)
         fetch_btn = tk.Button(self.current_frame, text="Fetch Latest Data", command=self.show_loading_screen)
-        saved_items_btn = tk.Button(self.current_frame, text="Saved Items", command="PLACEHOLDER")
         generate_report_btn = tk.Button(self.current_frame, text="Generate Report", command="PLACEHOLDER")
-        exit_btn = tk.Button(self.current_frame, text="Exit", command="PLACEHOLDER")
+        exit_btn = tk.Button(self.current_frame, text="Exit", command=self.exit)
 
         # Pack Buttons
         search_btn.pack()
         fetch_btn.pack()
-        saved_items_btn.pack()
         generate_report_btn.pack()
-        exit_btn.pack()
+        exit_btn.pack()"""
+
+        bg = "#2b2b2b"
+        purple = "#a000ff"
+
+        self.current_frame = tk.Frame(self.root, bg=bg)
+        self.current_frame.pack(fill="both", expand=True)
+
+        # top accent bar
+        tk.Frame(self.current_frame, bg=purple, height=12).pack(fill="x")
+
+        # title area
+        header = tk.Frame(self.current_frame, bg=bg)
+        header.pack(anchor="w", padx=40, pady=(28, 0))
+
+        tk.Label(
+            header,
+            text="AI Research Radar",
+            font=("Inter", 36, "bold"),
+            fg="white",
+            bg=bg
+        ).pack(anchor="w")
+
+        tk.Label(
+            header,
+            text="Up-to-date info on the latest AI news.",
+            font=("Inter", 13),
+            fg="#d0d0d0",
+            bg=bg
+        ).pack(anchor="w", pady=(4, 0))
+
+        # little underline
+        tk.Frame(
+            header,
+            bg="#8c8c8c",
+            width=30,
+            height=2
+        ).pack(anchor="w", pady=(8, 0))
+
+        # button grid
+        buttons = tk.Frame(self.current_frame, bg=bg)
+        buttons.pack(pady=55)
+
+        # load placeholder PNGs
+        self.db_img = tk.PhotoImage(file="images/database.png")
+        self.news_img = tk.PhotoImage(file="images/news.png")
+        self.report_img = tk.PhotoImage(file="images/report.png")
+        self.exit_img = tk.PhotoImage(file="images/exit.png")
+
+        card(buttons, self.db_img, self.show_search_library, 0, 0)
+        card(buttons, self.news_img, self.show_loading_screen, 0, 1)
+        card(buttons, self.report_img, "placeholder", 1, 0)
+        card(buttons, self.exit_img, self.exit, 1, 1)
+
 
     def show_loading_screen(self):
         self.clear_screen()  # Clear the dashboard away
@@ -76,12 +139,24 @@ class ResearchRadarApp:
     def show_search_library(self):
         self.clear_screen()
 
+        tree = ttk.Treeview(self.root, columns=("title", "url", "tags", "trending", "read", "saved"), show="headings")
+        tree.pack()
+
+        research_items = self.database.get_all_items()
+
+        for row in research_items:
+            tree.insert("", tk.END, values=row)
+
+
         self.show_selected_item("selected_item")
 
 
     def show_selected_item(self, selected_item):
         self.clear_screen
         print(selected_item)
+
+    def exit(self):
+        self.root.quit()
 
 
     # Page Operations -----------------------------------------------------------------------
