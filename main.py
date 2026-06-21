@@ -16,7 +16,7 @@ class ResearchRadarApp:
     def __init__(self, root):
         self.root = root
         self.root.title("AI Research Radar")
-        self.root.geometry("1200x600")
+        self.root.geometry("1200x650")
 
         # Initialise the databasemanager class enabling operations
         self.database = DatabaseManager()
@@ -35,17 +35,25 @@ class ResearchRadarApp:
     # Pages -----------------------------------------------------------------------
 
     def card(self, parent, text_line1, text_line2, img, card_command, card_row, card_column):
-        # Create the Card Outer Container (The purple top-border / outline effect)
+
+        # Black card background
         card_frame = tk.Frame(
             parent,
             bg="#000000",
-            highlightbackground="#8A00FF",
-            highlightthickness=2,
             bd=0,
-            width=300,
-            height=120 
+            width=400,
+            height=150
         )
-        card_frame.grid(row=card_row, column=card_column, padx=12, pady=12, sticky="nsew")
+        card_frame.grid(row=card_row, column=card_column, padx=20, pady=20)
+        card_frame.pack_propagate(False) 
+
+        # Top Accent
+        accent_bar = tk.Frame(
+            card_frame, 
+            bg="#8A00FF", 
+            height=12
+        )
+        accent_bar.pack(side="top", fill="x")
         
         # Configure grid weight inside the card so elements stretch nicely
         card_frame.columnconfigure(0, weight=1) 
@@ -53,13 +61,13 @@ class ResearchRadarApp:
 
         # 2. Text Container (Left Side)
         text_container = tk.Frame(card_frame, bg="#000000")
-        text_container.grid(row=0, column=0, padx=(20, 10), pady=20, sticky="w")
+        text_container.pack(side="left", padx=(25, 10), pady=(10, 0), anchor="w")
 
         # Line 1: e.g., "View"
         lbl1 = tk.Label(
             text_container,
             text=text_line1,
-            font=("Poppins", 30, "bold"),
+            font=("Poppins", 25, "bold"),
             fg="white",
             bg="#000000",
             anchor="w",
@@ -71,7 +79,7 @@ class ResearchRadarApp:
         lbl2 = tk.Label(
             text_container,
             text=text_line2,
-            font=("Poppins", 30, "bold"),
+            font=("Poppins", 25, "bold"),
             fg="white",
             bg="#000000",
             anchor="w",
@@ -87,10 +95,10 @@ class ResearchRadarApp:
             bd=0,
             highlightthickness=0
         )
-        icon_label.grid(row=0, column=1, padx=(0, 20), pady=20, sticky="e")
+        icon_label.pack(side="right", padx=(0, 25), pady=(10, 0))
 
         # 4. Bind Click Events to EVERYTHING inside the card so the whole card acts as a button
-        interactive_elements = [card_frame, text_container, lbl1, lbl2, icon_label]
+        interactive_elements = [card_frame, text_container, lbl1, lbl2, icon_label, accent_bar]
         
         for element in interactive_elements:
             element.config(cursor="hand2")
@@ -118,8 +126,6 @@ class ResearchRadarApp:
             font=("Poppins", 48, "bold"),
             fg="white",
             bg=bg,
-            padx=0,
-            pady=0
         ).pack(anchor="w", padx=(36, 0), pady=(8, 0))
 
         tk.Label(
@@ -128,19 +134,20 @@ class ResearchRadarApp:
             font=("Poppins", 20),
             fg="#d0d0d0",
             bg=bg
-        ).pack(anchor="w", padx=(36, 0), pady=(0, 0))
+        ).pack(anchor="w", padx=(36, 0), pady=(0, 8))
 
         # little underline
         tk.Frame(
-            header,
+            self.current_frame,
             bg="#FFFFFF",
             width=50,
             height=1
-        ).pack(anchor="w", padx=(40, 0), pady=(8, 0))
+        ).pack(anchor="w", padx=(76, 0), pady=(0, 0))
+
 
         # button grid
         buttons = tk.Frame(self.current_frame, bg=bg)
-        buttons.pack(pady=55)
+        buttons.pack(anchor="w", padx=(60, 0), pady=20)
 
         # load placeholder PNGs
         self.db_img = tk.PhotoImage(file="images/database.png")
@@ -159,6 +166,7 @@ class ResearchRadarApp:
 
         # Button 4: Exit Program
         self.card(buttons, "Exit", "Program", self.exit_img, self.exit, 1, 1)
+
 
 
     def show_loading_screen(self):
