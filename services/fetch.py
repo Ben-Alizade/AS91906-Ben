@@ -116,9 +116,9 @@ def fetch_hackernews(database):
 
 
 
-def fetch_arxiv(database):
+def fetch_arxiv(database, researchradarapp):
 
-    number_of_items_added = 0
+    item_count = 0
 
     client = arxiv.Client()
     search = arxiv.Search(
@@ -172,12 +172,11 @@ def fetch_arxiv(database):
 
         database.add_item(item)
         print(f"Item to the database")
-        number_of_items_added += 1
+        item_count += 1
 
         time.sleep(0.0001)
 
     print("Finished fetching from arxiv")
-    return number_of_items_added
 
 def fetch_output():
     pass

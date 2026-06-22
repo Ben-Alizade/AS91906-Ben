@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+from PIL import Image, ImageTk
 
 from database import DatabaseManager
 from models import ResearchItem
@@ -34,75 +35,35 @@ class ResearchRadarApp:
 
     # Pages -----------------------------------------------------------------------
 
-    def card(self, parent, text_line1, text_line2, img, card_command, card_row, card_column):
-
-        # Black card background
-        card_frame = tk.Frame(
+    def card(self, parent, image_obj, command, row, col):
+        
+        # 1. Create the button widget
+        # 'compound="top"' places the image directly above the text
+        btn = tk.Button(
             parent,
-            bg="#000000",
-            bd=0,
-            width=400,
-            height=150
-        )
-        card_frame.grid(row=card_row, column=card_column, padx=20, pady=20)
-        card_frame.pack_propagate(False) 
-
-        # Top Accent
-        accent_bar = tk.Frame(
-            card_frame, 
-            bg="#8A00FF", 
-            height=12
-        )
-        accent_bar.pack(side="top", fill="x")
-        
-        # Configure grid weight inside the card so elements stretch nicely
-        card_frame.columnconfigure(0, weight=1) 
-        card_frame.columnconfigure(1, weight=0)
-
-        # 2. Text Container (Left Side)
-        text_container = tk.Frame(card_frame, bg="#000000")
-        text_container.pack(side="left", padx=(25, 10), pady=(10, 0), anchor="w")
-
-        # Line 1: e.g., "View"
-        lbl1 = tk.Label(
-            text_container,
-            text=text_line1,
-            font=("Poppins", 25, "bold"),
+            image=image_obj,
+            command=command if command != "placeholder" else None,
+            compound="top",
+            font=("Poppins", 14, "bold"),
             fg="white",
-            bg="#000000",
-            anchor="w",
-            justify="left"
+            bg="#3a3a3a",         # Slightly lighter gray card background
+            activebackground="#505050", # Highlight color when clicked
+            activeforeground="white",
+            bd=0,                 # Flat design (no border)
+            relief="flat",
+            padx=20,
+            pady=20,
+            cursor="hand2"        # Changes cursor to a hand on hover
         )
-        lbl1.pack(anchor="w", fill="x")
-
-        # Line 2: e.g., "Database"
-        lbl2 = tk.Label(
-            text_container,
-            text=text_line2,
-            font=("Poppins", 25, "bold"),
-            fg="white",
-            bg="#000000",
-            anchor="w",
-            justify="left"
-        )
-        lbl2.pack(anchor="w", fill="x")
-
-        # 3. Icon Asset (Right Side)
-        icon_label = tk.Label(
-            card_frame,
-            image=img,
-            bg="#000000",
-            bd=0,
-            highlightthickness=0
-        )
-        icon_label.pack(side="right", padx=(0, 25), pady=(10, 0))
-
-        # 4. Bind Click Events to EVERYTHING inside the card so the whole card acts as a button
-        interactive_elements = [card_frame, text_container, lbl1, lbl2, icon_label, accent_bar]
         
-        for element in interactive_elements:
-            element.config(cursor="hand2")
-            element.bind("<Button-1>", lambda event: card_command())
+        # 2. Place it into the grid
+        # 'padx' and 'pady' create spacing *between* the buttons
+        btn.grid(row=row, column=col, padx=15, pady=15, sticky="nsew")
+        
+        # Optional: Configure the grid inside the buttons frame to make sizes uniform
+        parent.grid_columnconfigure(col, weight=1)
+        parent.grid_rowconfigure(row, weight=1)
+
 
     def show_dashboard(self):
         self.clear_screen()
@@ -114,7 +75,7 @@ class ResearchRadarApp:
         self.current_frame.pack(fill="both", expand=True)
 
         # top accent bar
-        tk.Frame(self.current_frame, bg=purple, height=12).pack(fill="x")
+        tk.Frame(self.current_frame, bg=purple, height=20).pack(fill="x")
 
         # title area
         header = tk.Frame(self.current_frame, bg=bg)
@@ -147,41 +108,129 @@ class ResearchRadarApp:
 
         # button grid
         buttons = tk.Frame(self.current_frame, bg=bg)
-        buttons.pack(anchor="w", padx=(60, 0), pady=20)
+        buttons.pack(anchor="w", padx=(60, 0), pady=(40, 0))
 
         # load placeholder PNGs
-        self.db_img = tk.PhotoImage(file="images/database.png")
-        self.fetch_img = tk.PhotoImage(file="images/fetch.png")
-        self.report_img = tk.PhotoImage(file="images/report.png")
-        self.exit_img = tk.PhotoImage(file="images/exit.png")
+        icon_size = (440, 140)
+
+        # load, resize, and convert PNGs using Pillow
+        img1 = Image.open("images/view_database.png").resize(icon_size, Image.Resampling.LANCZOS)
+        self.db_img = ImageTk.PhotoImage(img1)
+
+        img2 = Image.open("images/update_news.png").resize(icon_size, Image.Resampling.LANCZOS)
+        self.fetch_img = ImageTk.PhotoImage(img2)
+
+        img3 = Image.open("images/generate_report.png").resize(icon_size, Image.Resampling.LANCZOS)
+        self.report_img = ImageTk.PhotoImage(img3)
+
+        img4 = Image.open("images/exit_program.png").resize(icon_size, Image.Resampling.LANCZOS)
+        self.exit_img = ImageTk.PhotoImage(img4)
 
         # Button 1: View Database
-        self.card(buttons, "View", "Database", self.db_img, self.show_search_library, 0, 0)
+        self.card(buttons, self.db_img, self.show_search_library, 0, 0)
 
         # Button 2: Update News
-        self.card(buttons, "Update", "News", self.fetch_img, "placeholder", 0, 1)
+        self.card(buttons, self.fetch_img, self.show_loading_screen, 0, 1)
 
         # Button 3: Generate Report
-        self.card(buttons, "Generate", "Report", self.report_img, "placeholder", 1, 0)
+        self.card(buttons,  self.report_img, "placeholder", 1, 0)
 
         # Button 4: Exit Program
-        self.card(buttons, "Exit", "Program", self.exit_img, self.exit, 1, 1)
+        self.card(buttons, self.exit_img, self.exit, 1, 1)
 
 
 
     def show_loading_screen(self):
-        self.clear_screen()  # Clear the dashboard away
+        self.clear_screen()
 
-        # Create a fresh new frame container for the loading screen
-        self.current_frame = tk.Frame(self.root)
+        bg = "#2b2b2b"
+        purple = "#a000ff"
+
+        self.current_frame = tk.Frame(self.root, bg=bg) # bg=bg applies the background
         self.current_frame.pack(fill="both", expand=True)
 
-        # Create status text label
-        self.status_label = tk.Label(self.current_frame, text="Receiving up-to-date info....", font=("Arial", 20, "bold"))
-        self.status_label.pack(pady=20)
+        # top accent bar
+        tk.Frame(self.current_frame, bg=purple, height=20).pack(fill="x")
+
+        # Create main label
+        tk.Label(
+            self.current_frame,
+            text="Retrieving Data...",
+            font=("Poppins", 48, "bold"),
+            fg="white",
+            justify="center",
+            bg=bg,
+        ).pack(anchor="center", padx=(36, 0), pady=(80, 0))
+
+        # Currently fetching from...
+        tk.Label(
+            self.current_frame,
+            text="Currently fetching from ArXiv...",
+            font=("Poppins", 20),
+            fg="#d0d0d0",
+            justify="center",
+            bg=bg
+        ).pack(anchor="center", padx=(36, 0), pady=(0, 8))
+
+        # little underline
+        tk.Frame(
+            self.current_frame,
+            bg="#FFFFFF",
+            width=50,
+            height=1
+        ).pack(anchor="center", padx=(76, 0), pady=(0, 40))
+
+        # Create a frame for the metrics
+        metrics_frame = tk.Frame(self.current_frame, bg=bg)
+        metrics_frame.pack(anchor="center", pady=(0, 0))
+
+
+        # Left column: items added
+        items_block = tk.Frame(metrics_frame, bg=bg)
+        items_block.grid(row=0, column=0, padx=50)
+
+        tk.Label(
+            items_block, 
+            text="Items Added:", 
+            font=("Poppins", 16), 
+            fg="#d0d0d0", 
+            bg=bg
+        ).pack(anchor="w")
+
+        # Store a reference (self.items_label) so I can update the text later
+        self.items_label = tk.Label(
+            items_block, 
+            text="0/2k", 
+            font=("Poppins", 48, "bold"), 
+            fg=purple, 
+            bg=bg
+        )
+        self.items_label.pack(anchor="w")
+
+        # Right column: time elapsed
+        time_block = tk.Frame(metrics_frame, bg=bg)
+        time_block.grid(row=0, column=1, padx=50)
+
+        tk.Label(
+            time_block, 
+            text="Time Elapsed:", 
+            font=("Poppins", 16), 
+            fg="#d0d0d0", 
+            bg=bg
+        ).pack(anchor="e")
+
+        # Store a reference (self.time_label) to easily update the clock live
+        self.time_label = tk.Label(
+            time_block, 
+            text="0:21", 
+            font=("Poppins", 48, "bold"), 
+            fg=purple, 
+            bg=bg
+        )
+        self.time_label.pack(anchor="e")
 
         # Start background work
-        threading.Thread(target=self.run_fetch_background, daemon=True).start()
+        self.start_scraping_job()
 
     def show_search_library(self):
         self.clear_screen()
@@ -193,7 +242,6 @@ class ResearchRadarApp:
 
         for row in research_items:
             tree.insert("", tk.END, values=row)
-
 
         self.show_selected_item("selected_item")
 
@@ -208,31 +256,43 @@ class ResearchRadarApp:
 
     # Page Operations -----------------------------------------------------------------------
 
-    def run_fetch_background(self):
+    def start_scraping_job(self):
 
-        # Creates a time object to track the amount of time has passed
-        start_time = time.time()
+        # Set initial tracking variables
+        self.start_time = time.time()
+        self.is_scraping = True
+
+        # Run a thread to automatically update the 
+        scraper_thread = threading.Thread(target=self.network_scraper_task, daemon=True)
+        scraper_thread.start()
+
+        # 2. Start the main thread GUI label updater loop
+        self.update_gui()
+
+    def network_scraper_task(self):
+
+        fetch.fetch_arxiv(self.database, self)
+
+        self.is_scraping = False
         
-        arxiv_fetch_number = fetch.fetch_arxiv(self.database)
-        self.status_label.config(text="Received info from arXiv!\nNow fetching from Hacker News...")
-        
-        hackernews_fetch_number = fetch.fetch_hackernews(self.database)
-        total_added_items = arxiv_fetch_number + hackernews_fetch_number
-
-        # Calculate the total time elapsed
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-
-        # Display in minute:second format
-        elapsed_time = f"{math.floor(elapsed_time // 60):.0f}:{elapsed_time % 60:.0f}"
-        
-        self.status_label.config(text=f"Done! Added {total_added_items} items in {elapsed_time}.")
-
         # Create the return button after fetching is done
         return_btn = tk.Button(self.current_frame, text="Return Home", command=self.show_dashboard)
         return_btn.pack(pady=10)
 
+    def update_gui(self, item_count):
 
+        # Update Items Added label
+        self.items_label.config(text=f"{self.item_count}/2k")
+
+        # Update Time Elapsed clock label
+        elapsed = int(time.time() - self.start_time)
+        self.time_label.config(text=f"{elapsed // 60}:{elapsed % 60:02d}")
+
+        # If the background thread is still running, check back in 200 milliseconds
+        if self.is_scraping:
+            self.root.after(200, self.check_and_update_gui)
+
+    
 
 def main():
     root = tk.Tk()
