@@ -12,18 +12,17 @@ from datetime import datetime
 from models import ResearchItem
 import json
 
-def fetch_hackernews(database):
-    number_of_items_added = 0
+def fetch_hackernews(database, researchradarapp):
     
     # Get data from hackernews
-    url = "https://algolia.com"
+    url = "http://hn.algolia.com/api/v1/search"
 
     # 1735689600 corresponds to Jan 1, 2025
     params = {
         "query": "AI",
         "tags": "story",
         "numericFilters": "created_at_i>1735689600",
-        "hitsPerPage": 100
+        "hitsPerPage": 1000
     }
 
     print("Querying Hacker News...")
@@ -101,7 +100,7 @@ def fetch_hackernews(database):
 
         database.add_item(item)
         print(f"Added HN item: {item.title}")
-        number_of_items_added += 1
+        researchradarapp.item_count += 1
         time.sleep(0.001)
 
     print("Finished fetching from Hacker News")
@@ -112,13 +111,8 @@ def fetch_hackernews(database):
         database.mark_as_trending(url)
 
 
-    return number_of_items_added
-
-
 
 def fetch_arxiv(database, researchradarapp):
-
-    item_count = 0
 
     client = arxiv.Client()
     search = arxiv.Search(
@@ -174,9 +168,7 @@ def fetch_arxiv(database, researchradarapp):
         print(f"Item to the database")
         item_count += 1
 
+        researchradarapp.item_count += 1
         time.sleep(0.0001)
 
     print("Finished fetching from arxiv")
-
-def fetch_output():
-    pass

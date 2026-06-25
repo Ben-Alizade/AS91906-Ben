@@ -163,14 +163,15 @@ class ResearchRadarApp:
         ).pack(anchor="center", padx=(36, 0), pady=(80, 0))
 
         # Currently fetching from...
-        tk.Label(
+        self.fetch_label = tk.Label(
             self.current_frame,
             text="Currently fetching from ArXiv...",
             font=("Poppins", 20),
             fg="#d0d0d0",
             justify="center",
             bg=bg
-        ).pack(anchor="center", padx=(36, 0), pady=(0, 8))
+        )
+        self.fetch_label.pack(anchor="center", padx=(36, 0), pady=(0, 8))
 
         # little underline
         tk.Frame(
@@ -261,36 +262,40 @@ class ResearchRadarApp:
         # Set initial tracking variables
         self.start_time = time.time()
         self.is_scraping = True
+        self.item_count = 0
 
         # Run a thread to automatically update the 
         scraper_thread = threading.Thread(target=self.network_scraper_task, daemon=True)
         scraper_thread.start()
 
         # 2. Start the main thread GUI label updater loop
-        self.update_gui()
+        self.update_gui_loop()
 
     def network_scraper_task(self):
 
         fetch.fetch_arxiv(self.database, self)
-
+        self.fetch_label.config(text="Currently fetching from HackerNews...")
+        fetch.fetch_hackernews(self.database, self)
         self.is_scraping = False
-        
-        # Create the return button after fetching is done
-        return_btn = tk.Button(self.current_frame, text="Return Home", command=self.show_dashboard)
-        return_btn.pack(pady=10)
 
-    def update_gui(self, item_count):
+    def update_gui_loop(self):
 
-        # Update Items Added label
+        # Update items
         self.items_label.config(text=f"{self.item_count}/2k")
 
-        # Update Time Elapsed clock label
+        # Ypdate the clock
         elapsed = int(time.time() - self.start_time)
         self.time_label.config(text=f"{elapsed // 60}:{elapsed % 60:02d}")
 
-        # If the background thread is still running, check back in 200 milliseconds
+        # Check if thread is still running
         if self.is_scraping:
-            self.root.after(200, self.check_and_update_gui)
+            # Call this same function again in 100 milliseconds
+            self.root.after(100, self.update_gui_loop)
+        else:
+            # Scraping finished! Safely create the button on the main thread
+            self.items_label.config(font=("Poppins Black", 48, "bold"))
+            return_btn = tk.Button(self.current_frame, text="Return Home", command=self.show_dashboard)
+            return_btn.pack(pady=10)
 
     
 
