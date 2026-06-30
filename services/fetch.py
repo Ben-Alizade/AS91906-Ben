@@ -1,27 +1,34 @@
 import arxiv
 import requests
-import time
 
 from models import ResearchItem
-import json
+from pathlib import Path
 
-import arxiv
-import requests
 import time
 from datetime import datetime
-from models import ResearchItem
 import json
+
+# Get the file path for last_search.json
+BASE_DIR = Path(__file__).resolve().parent.parent
+DATA_DIR = BASE_DIR / "data"
+LAST_SEARCH_PATH = DATA_DIR / "last_search.json"
 
 def fetch_hackernews(database, researchradarapp):
     
     # Get data from hackernews
     url = "http://hn.algolia.com/api/v1/search"
 
-    # 1735689600 corresponds to Jan 1, 2025
+    # Retrieve the last searched data
+    with open(LAST_SEARCH_PATH, 'r') as file:
+        data = json.load(file)
+
+    last_search = data['last_searched']
+    print(last_search)
+    
     params = {
         "query": "AI",
         "tags": "story",
-        "numericFilters": "created_at_i>1735689600",
+        "numericFilters": f"created_at_i>{last_search}",
         "hitsPerPage": 1000
     }
 
@@ -37,7 +44,7 @@ def fetch_hackernews(database, researchradarapp):
         print("RAW RESPONSE TEXT:", response.text[:500]) # Prints first 500 characters
     
     try:
-        # 3. Safely attempt to parse the JSON
+        # Safely attempt to parse the JSON
         response_data = response.json()
     except requests.exceptions.JSONDecodeError:
         print("Failed to decode JSON. The server sent text or HTML instead.")
@@ -105,6 +112,16 @@ def fetch_hackernews(database, researchradarapp):
 
     print("Finished fetching from Hacker News")
 
+    # Return the search time as a numerical object (eg. 1735689600)
+    timestamp = int(datetime.now().timestamp())
+    print(timestamp)
+
+    data['last_searched'] = timestamp
+
+    # Write up the new timestamp to the JSON file
+    with open(LAST_SEARCH_PATH, 'w') as file:
+        json.dump(data, file)
+
     # Tag duplicate items as important
     for url in important_urls:
         # We look for any existing row where the URL contains the arXiv ID string
@@ -166,7 +183,6 @@ def fetch_arxiv(database, researchradarapp):
 
         database.add_item(item)
         print(f"Item to the database")
-        item_count += 1
 
         researchradarapp.item_count += 1
         time.sleep(0.0001)
